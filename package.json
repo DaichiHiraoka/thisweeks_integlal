@@ -1,0 +1,25 @@
+{
+  "name": "thisweeks_integlal",
+  "module": "app/server/server.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run app/server/server.ts",
+    "seed": "bun run app/scripts/seed.ts",
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.54.2",
+    "hono": "^4.9.0",
+    "preact": "^10.27.0",
+    "preact-render-to-string": "^6.5.13",
+    "zod": "^4.0.15"
+  }
+}
