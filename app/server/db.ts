@@ -35,6 +35,9 @@ db.exec(`CREATE TABLE IF NOT EXISTS problems(
   created_at TEXT DEFAULT (datetime('now'))
 );`);
 
+db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_problems_unique ON problems(session_id, video_id, t_sec);`);
+db.exec(`CREATE INDEX IF NOT EXISTS idx_problems_session_created ON problems(session_id, created_at DESC);`);
+
 db.exec(`CREATE TABLE IF NOT EXISTS solves(
   id TEXT PRIMARY KEY,
   problem_id TEXT NOT NULL,
@@ -51,20 +54,42 @@ db.exec(`CREATE TABLE IF NOT EXISTS watchlog(
   updated_at TEXT DEFAULT (datetime('now'))
 );`);
 
-export function getProblems(session_id: string, limit = 20): Problem[] {
-  const stmt = db.query<Problem, [string, number]>(
-    'SELECT * FROM problems WHERE session_id = ? ORDER BY created_at DESC LIMIT ?'
-  );
-  return stmt.all(session_id, limit);
+export function getProblems(session_id: string, cursor?: string, limit = 20): Problem[] {
+  let query = 'SELECT * FROM problems WHERE session_id = ?';
+  const params: any[] = [session_id];
+  if (cursor) {
+    query += ' AND created_at < ?';
+    params.push(cursor);
+  }
+  query += ' ORDER BY created_at DESC LIMIT ?';
+  params.push(limit);
+  const stmt = db.query<Problem, any[]>(query);
+  return stmt.all(...params);
 }
 
-export function insertProblem(p: Omit<Problem, 'id' | 'created_at'> & { id?: string }): string {
+export function insertProblem(p: { session_id: string; question_tex: string; answer_tex: string; video_id: string; t_sec: number; id?: string }): { id: string; created: boolean } {
   const id = p.id || crypto.randomUUID();
   const stmt = db.prepare(
     'INSERT INTO problems (id, session_id, question_tex, answer_tex, video_id, t_sec) VALUES (?,?,?,?,?,?)'
   );
-  stmt.run(id, p.session_id, p.question_tex, p.answer_tex, p.video_id, p.t_sec);
-  return id;
+  try {
+    stmt.run(id, p.session_id, p.question_tex, p.answer_tex, p.video_id, p.t_sec);
+    return { id, created: true };
+  } catch (e) {
+    if (String(e).includes('UNIQUE')) {
+      const existing = db
+        .query<{ id: string }, [string, string, number]>(
+          'SELECT id FROM problems WHERE session_id = ? AND video_id = ? AND t_sec = ?'
+        )
+        .get(p.session_id, p.video_id, p.t_sec);
+      if (existing) return { id: existing.id, created: false };
+    }
+    throw e;
+  }
+}
+
+export function getProblemById(id: string): Problem | undefined {
+  return db.query<Problem, [string]>('SELECT * FROM problems WHERE id = ?').get(id) || undefined;
 }
 
 export function insertSolve(s: { problem_id: string; user_answer_tex: string; correct: boolean; time_ms: number; }): string {

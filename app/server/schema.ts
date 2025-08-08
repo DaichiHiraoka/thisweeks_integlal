@@ -1,11 +1,12 @@
 import { z } from 'zod';
 
 export const problemInputSchema = z.object({
-  session_id: z.string(),
+  session_id: z.string().uuid().or(z.literal('demo')),
   question_tex: z.string().min(1).max(2000),
   answer_tex: z.string().min(1).max(2000),
   video_id: z.string(),
-  t_sec: z.number().int(),
+  t_sec: z.number().int().min(0).max(36000),
+  source: z.enum(['auto', 'manual']).default('auto'),
 });
 
 export const solveInputSchema = z.object({
