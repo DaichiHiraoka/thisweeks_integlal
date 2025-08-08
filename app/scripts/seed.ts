@@ -23,5 +23,4 @@ insertProblem({
   video_id: 'demo',
   t_sec: 20,
 });
-
 console.log('seeded');

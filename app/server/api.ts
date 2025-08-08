@@ -22,7 +22,7 @@ export function createApi(clients: Set<any>) {
     const result = insertProblem(parsed.data);
     const problem = result.created
       ? { id: result.id, ...parsed.data, created_at: new Date().toISOString() }
-      : getProblemById(result.id)!;
+      : getProblemById(result.id)!; // duplicate → 既存レコードを取得
     for (const ws of clients) {
       ws.send(JSON.stringify({ type: 'problem_added', problem }));
     }

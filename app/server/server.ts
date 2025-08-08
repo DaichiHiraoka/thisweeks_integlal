@@ -23,7 +23,6 @@ app.get('/', (c) => {
 });
 
 app.route('/api', createApi(clients));
-
 // static files
 app.use('/styles.css', serveStatic({ path: './app/ui/styles.css' }));
 app.use('/client.ts', serveStatic({ path: './app/ui/client.ts' }));

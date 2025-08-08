@@ -24,6 +24,7 @@ export default function PracticeIsland({ ws }: { ws: WebSocket }) {
       setProblems(data.items || []);
     }
     load();
+
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
       if (msg.type === 'problem_added' && msg.problem.session_id === sessionId) {
@@ -69,6 +70,7 @@ export default function PracticeIsland({ ws }: { ws: WebSocket }) {
           </li>
         ))}
       </ul>
+
       {selected && (
         <div>
           <p>{selected.question_tex}</p>
